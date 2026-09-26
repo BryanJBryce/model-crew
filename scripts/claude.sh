@@ -109,6 +109,7 @@ show_status() {
       fi
       jq --arg pid "$pid" --argjson alive "$alive" --argjson locked "$locked" '
         . + {lock_present:$locked, lock_owner_pid:$pid, lock_owner_alive:$alive,
+             api_equivalent_cost_scope:"reported_session_total_may_include_history",
              cache_expiry_estimate:null}
       ' "$f"
     done
@@ -219,6 +220,7 @@ update_state --arg t "$started" --arg op "$op" --arg run "$run" \
   .cli_version=$version | .wrapper_pid=$pid | .child_pid=null |
   .finished_at=null | .exit_code=null | .last_usage=null |
   .last_model_usage=null | .api_equivalent_cost_usd=null |
+  .api_equivalent_cost_scope="reported_session_total_may_include_history" |
   .permission_denials=null | .reported_session_id=null | .error=null'
 running=1
 (
@@ -262,7 +264,7 @@ update_state --arg t "$(now)" --arg status "$outcome" --arg error "$error" --arg
   .error=(if $error=="" then null else $error end)'
 running=0
 jq -c '{workstream,last_operation,status,session_id,started_at,finished_at,
-  last_run,last_usage,api_equivalent_cost_usd,exit_code,error}' "$state" >> "$root/$ws/events.jsonl"
+  last_run,last_usage,api_equivalent_cost_usd,api_equivalent_cost_scope,exit_code,error}' "$state" >> "$root/$ws/events.jsonl"
 if [[ "$result_valid" == true ]]; then cat "$run/result.json"; fi
 if [[ "$outcome" != ready ]]; then
   printf 'model-crew: %s Logs: %s\n' "$error" "$run" >&2

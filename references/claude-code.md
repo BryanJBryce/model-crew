@@ -18,6 +18,8 @@ New sessions default to `claude-opus-5-5`. `MODEL_CREW_MODEL`, `MODEL_CREW_EFFOR
 
 Permission mode is inherited unless explicitly selected; supported overrides exclude bypassPermissions. `--permission-prompts none` makes a headless call deny actions requiring an interactive decision. Existing allowed actions and the selected permission mode still apply. Record denials and resolve the specific missing authority/configuration instead of enabling a blanket bypass. Set `MODEL_CREW_PERMISSION_MODE=acceptEdits` when file edits are already authorized and that mode is suitable.
 
+If an assigned check is denied, repair the specific permission within existing authorization or have the coordinator run that check. Do not repeatedly request the same blocked command. Report checks that have not run as unverified.
+
 `MODEL_CREW_DISABLE_TOOLS=1` starts a no-tools session with an empty strict MCP configuration for conversational smoke tests. This choice persists with that workstream. It is not the normal implementation configuration.
 
 ## Continuation and recovery
@@ -27,10 +29,11 @@ Permission mode is inherited unless explicitly selected; supported overrides exc
 - `fork` copies saved invocation settings, allocates a new UUID before the call, and combines `--resume`, `--fork-session`, and `--session-id`. Both source and destination are locked during the call. After a failed/interrupted fork, inspect retained evidence and confirm whether the allocated ID exists in Claude's session inventory; use `followup` only when that session exists. An allocated ID alone does not prove the fork was created. Do not blindly retry as a new fork.
 - Lock contention returns an error immediately. Locks include the owning PID. After an uncatchable process death, inspect the PID and recorded run before manually removing a stale lock; do not steal a live lock. A killed wrapper can leave a child process, so check both recorded PIDs.
 - A failed or interrupted run retains its ID and evidence. Read its last result before deliberately using `followup`; session continuity does not imply the previous task completed.
+- For a context-limit failure, preserve the diff and update the handoff with decisions, unresolved findings, and test evidence. Confirm the old writer has stopped, then use `start` with a new workstream name and that summary. Keep Opus implementation ownership; do not resume or fork the oversized history.
 - `end` marks local bookkeeping ended. It preserves session IDs/logs and neither deletes Claude history nor flushes caches. A new workstream uses a new name.
 - Do not use `--continue` for parallel jobs. Avoid simultaneous direct CLI activity against a session managed by this helper; its locks coordinate helper invocations, not unrelated programs.
 
-JSON status includes the last observed usage, model usage, permission denials, and result location. `api_equivalent_cost_usd` is Claude's reported cost estimate, not a Max subscription bill. TTL is unknown unless exposed by observed usage; the helper does not provide a fabricated countdown. `running` with no live lock should be investigated as interrupted.
+JSON status includes the last observed usage, model usage, permission denials, and result location. `api_equivalent_cost_usd` preserves Claude's reported estimate; `api_equivalent_cost_scope: reported_session_total_may_include_history` labels it as a potentially cumulative session total, not a per-call charge or Max subscription bill. Status adds that label to older records too. TTL is unknown unless exposed by observed usage; the helper does not provide a fabricated countdown. `running` with no live lock should be investigated as interrupted.
 
 Live resume checks showed that `total_cost_usd` and `modelUsage` can include prior turns, while `usage` describes the latest call. Do not sum the stored reported cost totals across follow-ups or forks. Use per-call token usage with the applicable rates, or a verified cumulative accounting method that excludes inherited history. The helper preserves the raw observations rather than claiming a per-call dollar charge.
 

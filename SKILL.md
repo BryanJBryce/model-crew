@@ -1,24 +1,26 @@
 ---
 name: model-crew
-description: Coordinate coding work across Luna, Astra, Opus, and Sol when explicitly invoked. Route implementation and focused reviews, preserve useful worker sessions, and verify completed slices.
+description: Coordinate coding work from the current main task across Luna, Astra, Opus, and Sol when explicitly invoked. Route implementation and focused reviews, preserve useful worker sessions, and verify completed slices.
 ---
 
 # Model Crew
 
 Use only when explicitly called. Optimize for accepted work, including correction and review overhead. Preserve the user's model choices and existing authorization.
 
+**The main user-facing task is the coordinator, regardless of its selected model.** Keep decomposition, dispatch, consolidation, acceptance, and user communication there. Do not spawn a coordinator subagent or create a replacement coordinator task to match a model preference. Delegate bounded investigation, planning, implementation, or review directly to workers. A worker follows its assigned scope and reports back; reading this skill does not make it another coordinator.
+
 ## Routing
 
 | Role | Default | Use |
 | --- | --- | --- |
-| Coordinator | Luna 6 Max, Fast | Break down work, find relevant files and examples, dispatch, consolidate findings, track acceptance. Handle tiny edits directly when a handoff adds overhead. |
+| Coordinator | Current main task; Luna 6 Max, Fast is a suggested user-selected setup | Break down work, find relevant files and examples, dispatch, consolidate findings, track acceptance. Handle tiny edits directly when a handoff adds overhead. |
 | Targeted reviewer | Luna 6 Medium | Investigate a named concern in a specific diff, subsystem, or behavior; return concrete evidence. |
 | Planner and difficult reasoning | Astra Xhigh, Standard | Consequential architecture, ambiguity, interacting risks, difficult diagnosis, and substantive review decisions. Implement a hard piece directly when useful. |
 | Feature implementer | Opus 5.5 through Claude Code | Feature construction, integration, UI implementation, and visual polish. Use the configured Claude subscription; preserve configured effort rather than forcing Max. |
 | Bounded implementer | Sol 6, Standard | Mechanical edits, established patterns, straightforward refactors, and well-specified changes with clear checks. Long duration alone is not a reason to choose Sol. |
 | Conditional specialist | Daybreak Blue, when available to subagents | Security-focused review, vulnerability triage, remediation, and patch validation; also a bounded task the user explicitly assigns to it. |
 
-Fast belongs to the Luna coordinator; do not propagate it to expensive workers. Preserve explicitly requested effort settings. If the current coordinator or tools cannot express a preference, disclose the actual setting instead of claiming a model switch or creating an unsolicited replacement task.
+The Luna coordinator preference is not a prerequisite: continue coordinating in the current main task with its selected model and settings. Do not propagate Fast to expensive workers. Preserve explicitly requested effort settings. If the current task or tools cannot express a preference, disclose the actual setting instead of claiming a model switch.
 
 Prefer Daybreak Blue for the specialist work above when the current approved runtime exposes it through the subagent interface. Resolve its exact model ID and supported effort from that interface; do not infer subagent access from a UI picker or another product surface. Confirm the reported model when available. If unavailable, use the existing role's model within the authorized scope and state the fallback; if the user requires Daybreak specifically, report the limitation instead of substituting. Do not relabel Sol as Daybreak or invent a model alias. [Official Daybreak role guidance](https://learn.chatgpt.com/docs/cyber-safety#choose-the-right-model).
 
@@ -29,10 +31,10 @@ Use available native subagent tools for bounded internal delegation. Create sepa
 ## Work through a slice
 
 1. Locate the canonical plan and current repository/worktree state. Small clear changes go directly to implementation; ask Astra to plan only where consequential decisions or uncertainty warrant it. Reuse a sufficient existing plan.
-2. Prepare the short handoff below. Luna should inspect likely entry points and supply working examples so an expensive implementer starts with useful context. File hints are verified starting points, not a ban on necessary discovery.
+2. The main task prepares the short handoff below: inspect likely entry points and supply working examples so an expensive implementer starts with useful context. A bounded repository investigation may be delegated when useful; its worker returns files and evidence without taking over coordination. File hints are verified starting points, not a ban on necessary discovery.
 3. Assign one owner for changes to a given area. Allow parallel independent work without overlapping edits or duplicate full-suite runs. Use the Claude helper for Opus; read [Claude sessions](references/claude-code.md) when doing so.
 4. Review where useful with Luna Medium. Give each reviewer a distinct question and the current diff, expected behavior, and relevant files. Avoid anchoring an independent reviewer on the implementer's conclusions.
-5. Luna deduplicates findings. The implementer reproduces plausible issues and fixes confirmed problems. Use Astra for consequential, cross-cutting, or disputed questions requiring broader judgment, not for routine consolidation of every review.
+5. The main task deduplicates findings. The implementer reproduces plausible issues and fixes confirmed problems. Use Astra for consequential, cross-cutting, or disputed questions requiring broader judgment, not for routine consolidation of every review.
 6. Send related corrections to the same implementation session. After two unsuccessful attempts at the same issue, obtain a concrete reproduction and change the approach; use Astra diagnosis when needed instead of repeating guesses.
 7. Verify acceptance and actual user-visible behavior. Follow repository checks, including database queues where required. Keep one full-gate owner per repository. UI work needs inspection of the running interface. A separate polish pass is optional, not a mandatory final handoff.
 8. Update canonical project state with the verified result and remaining limits. Close the workstream when appropriate; preserve recovery information.

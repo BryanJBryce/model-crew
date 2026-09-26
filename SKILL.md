@@ -1,6 +1,6 @@
 ---
 name: model-crew
-description: Coordinate coding work from the current main task across Luna, Astra, Opus, and Sol when explicitly invoked. Route implementation and focused reviews, preserve useful worker sessions, and verify completed slices.
+description: Coordinate coding work from the current main task when explicitly invoked. Default to Opus implementation, Luna focused reviews, and Astra consequential planning/review; reserve Sol for mechanical work.
 ---
 
 # Model Crew
@@ -9,7 +9,7 @@ Use only when explicitly called. After invocation, keep this workflow active for
 
 **The main user-facing task is the coordinator, regardless of its selected model.** Keep decomposition, dispatch, consolidation, acceptance, and user communication there. Do not spawn a coordinator subagent or create a replacement coordinator task to match a model preference. Delegate bounded investigation, planning, implementation, or review directly to workers. A worker follows its assigned scope and reports back; reading this skill does not make it another coordinator.
 
-**The coordinator does not implement.** Delegate source code, tests, migrations, dependency/lockfile changes, configuration, and implementation documentation, including small fixes and review corrections. There is no tiny-edit or quick-ticket exception. The main task may inspect code/diffs, run verification as the designated gate owner, and maintain handoffs, execution metadata, and project status. Only an explicit user instruction to implement in the main task overrides this boundary. If a worker is unavailable or blocked, repair the delegation or use an available implementation worker; do not silently take over its edits.
+**The coordinator does not implement.** Delegate source code, tests, migrations, dependency/lockfile changes, configuration, and implementation documentation, including small fixes and review corrections. There is no tiny-edit or quick-ticket exception; verification, code generation, UI polish, and deployment preparation do not grant an editing exception either. The main task may inspect code/diffs, run verification as the designated gate owner, and maintain handoffs, execution metadata, and project status. Only an explicit user instruction to implement in the main task overrides this boundary. If a worker is unavailable or blocked, repair the delegation or select another worker under the routing rules below; do not silently take over its edits.
 
 Keep ownership clear in updates: name the worker making changes and distinguish its work from the coordinator's checks. A correction such as “you should not be writing code; use your crew” changes who performs the work, not the authorized objective. Continue through the assigned implementer; do not interpret it as cancellation or interrupt the worker without a separate reason.
 
@@ -19,10 +19,16 @@ Keep ownership clear in updates: name the worker making changes and distinguish 
 | --- | --- | --- |
 | Coordinator | Current main task; Luna 6 Max, Fast is a suggested user-selected setup | Break down work, find relevant files and examples, dispatch, consolidate findings, track acceptance. No implementation edits. |
 | Targeted reviewer | Luna 6 Medium | Investigate a named concern in a specific diff, subsystem, or behavior; return concrete evidence. |
-| Planner and difficult reasoning | Astra Xhigh, Standard | Consequential architecture, ambiguity, interacting risks, difficult diagnosis, and substantive review decisions. Implement a hard piece directly when useful. |
-| Feature implementer | Opus 5.5 through Claude Code | Feature construction, integration, UI implementation, and visual polish. Use the configured Claude subscription; preserve configured effort rather than forcing Max. |
-| Bounded implementer | Sol 6, Standard | Mechanical edits, established patterns, straightforward refactors, and well-specified changes with clear checks. Long duration alone is not a reason to choose Sol. |
+| Planner and difficult reasoning | Astra Xhigh, Standard | Consequential architecture, ambiguity, interacting risks, difficult diagnosis, and substantive review decisions. Implement only when explicitly assigned by the user. |
+| Default implementation owner | Opus 5.5 through Claude Code | Own tickets, feature construction, bug fixes, integration, UI, tests, and related corrections. Use the configured Claude subscription; preserve configured effort rather than forcing Max. |
+| Mechanical worker only | Sol 6, Standard | Execute an exact, settled transformation with no remaining behavior or design decisions, such as an approved symbol rename or deterministic codemod. Do not assign integrated tickets to Sol. |
 | Conditional specialist | Daybreak Blue, when available to subagents | Security-focused review, vulnerability triage, remediation, and patch validation; also a bounded task the user explicitly assigns to it. |
+
+**Choose Opus before implementation starts.** “Bounded,” “quick,” known file locations, existing patterns, a detailed Astra plan, and clear acceptance tests do not by themselves qualify work for Sol. Work that changes authentication/authorization, payment behavior, security policy, data lifecycles, external contracts, or a user flow belongs to Opus, including when only a few files need edits. For Sol, the handoff must name the exact mechanical transformation and explain why no implementation judgment remains; if uncertain, use Opus. A specialist review does not replace the implementation owner.
+
+Opus runs through the shell using this skill's [Claude helper](scripts/claude.sh); read [Claude sessions](references/claude-code.md) for invocation and recovery. Its absence from native subagent models or MCP/tool search results says nothing about this CLI path. Before declaring Opus unavailable, check the helper and local Claude CLI and retain the concrete filesystem, CLI, authentication, or invocation error. Without that evidence, availability is unverified. If blocked, diagnose and repair that path first; do not downgrade integrated implementation to Sol for tool convenience. An explicit user choice of a different implementer takes precedence.
+
+If an in-progress ticket was misrouted, stop overlapping edits, preserve the existing diff, and transfer implementation ownership to Opus. Have Opus inspect, complete, and verify the patch; do not request a ceremonial extra pass or discard valid work merely to change its author. Keep the same owner through review corrections and retain the designated final reviewer. For already completed work, report the actual contributors; do not reopen it solely to claim the preferred model participated.
 
 The Luna coordinator preference is not a prerequisite: continue coordinating in the current main task with its selected model and settings. Do not propagate Fast to expensive workers. Preserve explicitly requested effort settings. If the current task or tools cannot express a preference, disclose the actual setting instead of claiming a model switch.
 
@@ -34,7 +40,7 @@ Use available native subagent tools for bounded internal delegation. Create sepa
 
 ## Work through a slice
 
-1. Locate the canonical plan and current repository/worktree state. Route small clear changes directly to an implementation worker; ask Astra to plan only where consequential decisions or uncertainty warrant it. Reuse a sufficient existing plan.
+1. Locate the canonical plan and current repository/worktree state. Choose Opus as implementation owner, using Sol only for the mechanical exception above. Small clear tickets can skip a planning pass; they still go to Opus. Ask Astra to plan only where consequential decisions or uncertainty warrant it. Reuse a sufficient existing plan.
 2. The main task prepares the short handoff below: inspect likely entry points and supply working examples so an expensive implementer starts with useful context. A bounded repository investigation may be delegated when useful; its worker returns files and evidence without taking over coordination. File hints are verified starting points, not a ban on necessary discovery.
 3. Assign one owner for changes to a given area. Allow parallel independent work without overlapping edits or duplicate full-suite runs. Use the Claude helper for Opus; read [Claude sessions](references/claude-code.md) when doing so.
 4. Review where useful with Luna Medium. Give each reviewer a distinct question and the current diff, expected behavior, and relevant files. Avoid anchoring an independent reviewer on the implementer's conclusions.
@@ -46,6 +52,7 @@ Use available native subagent tools for bounded internal delegation. Create sepa
 ### Handoff
 
 - Deliverable and acceptance criteria.
+- Implementation owner and model; for Sol, the exact mechanical transformation and why it qualifies.
 - Exact repository, worktree, branch/revision, and canonical plan pointer.
 - Relevant files/symbols, inspected facts, and a working neighboring example.
 - Known failure or reproduction; constraints and scope boundaries.
@@ -53,6 +60,8 @@ Use available native subagent tools for bounded internal delegation. Create sepa
 - Unresolved decisions, explicitly labeled assumptions, and stopping point.
 
 Implementers report changes, verification evidence, deviations, and unmet criteria. Send concise results back; do not copy complete conversation histories or repeated tool logs into every worker.
+
+Record each actual contributor's role, observed model, agent/session ID, and result pointer for this workstream in its handoff. Distinguish planned, running, completed, and unused roles. Base completion summaries on those records: an earlier feature's Opus review, a launch without a result, or an Astra planning memo is not evidence of current implementation or final review. Name actual substitutions and omissions instead of claiming the requested crew sequence occurred. Do not launch unnecessary workers just to fill a roster.
 
 ### Targeted review
 

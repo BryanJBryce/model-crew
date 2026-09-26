@@ -1,6 +1,6 @@
 interface:
   display_name: "Model Crew"
-  short_description: "Coordinate Luna, Astra, Opus, and Sol coding work"
-  default_prompt: "Use $model-crew with this main task coordinating only; delegate all implementation and corrections to workers and preserve the workflow across follow-ups."
+  short_description: "Coordinate Opus implementation and focused reviews"
+  default_prompt: "Use $model-crew with this main task coordinating only, Opus owning implementation and corrections, and Sol reserved for exact mechanical work."
 policy:
   allow_implicit_invocation: false

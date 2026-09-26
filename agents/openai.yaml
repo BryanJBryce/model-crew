@@ -1,0 +1,6 @@
+interface:
+  display_name: "Model Crew"
+  short_description: "Coordinate Luna, Astra, Opus, and Sol coding work"
+  default_prompt: "Use $model-crew to complete this coding task with scoped implementation and review."
+policy:
+  allow_implicit_invocation: false
